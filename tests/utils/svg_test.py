@@ -140,3 +140,19 @@ class TestIterParsePath:
             SvgPathInstruction(command=SvgPathCommands.MOVE_TO, x=10, y=10),
             SvgPathInstruction(command=SvgPathCommands.CUBIC_CURVE_BY, x=50, y=10),
         ]
+
+    def test_should_parse_bezier_seq_cubic_curve_to(self):
+        result = list(iter_parse_path('M10 10 S 40 20, 50 10'))
+        LOGGER.debug('result: %r', result)
+        assert result == [
+            SvgPathInstruction(command=SvgPathCommands.MOVE_TO, x=10, y=10),
+            SvgPathInstruction(command=SvgPathCommands.SEQ_CUBIC_CURVE_TO, x=50, y=10),
+        ]
+
+    def test_should_parse_bezier_seq_cubic_curve_by(self):
+        result = list(iter_parse_path('M10 10 s 40 20, 50 10'))
+        LOGGER.debug('result: %r', result)
+        assert result == [
+            SvgPathInstruction(command=SvgPathCommands.MOVE_TO, x=10, y=10),
+            SvgPathInstruction(command=SvgPathCommands.SEQ_CUBIC_CURVE_BY, x=50, y=10),
+        ]

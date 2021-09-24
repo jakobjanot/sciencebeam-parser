@@ -18,6 +18,8 @@ class SvgPathCommands:
     CLOSE_PATH = 'Z'
     CUBIC_CURVE_TO = 'C'
     CUBIC_CURVE_BY = 'c'
+    SEQ_CUBIC_CURVE_TO = 'S'
+    SEQ_CUBIC_CURVE_BY = 's'
 
 
 class SvgPathInstruction(NamedTuple):
@@ -64,12 +66,9 @@ def iter_parse_path(path_expr: str) -> Iterable[SvgPathInstruction]:
         elif command_upper == SvgPathCommands.VERTICAL_LINE_TO:
             x = previous_x if command_upper == command else 0.0
             y = values[0]
-        elif command_upper == SvgPathCommands.CUBIC_CURVE_TO:
-            x = values[4]
-            y = values[5]
         else:
-            x = values[0]
-            y = values[1]
+            x = values[-2]
+            y = values[-1]
         yield SvgPathInstruction(command=command, x=x, y=y)
         previous_x = x
         previous_y = y

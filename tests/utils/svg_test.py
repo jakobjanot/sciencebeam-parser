@@ -1,9 +1,14 @@
 import logging
 
+from lxml.builder import ElementMaker
+
 from sciencebeam_parser.utils.svg import (
+    SVG_NS,
+    SvgBoundingBox,
     SvgPathCommands,
     SvgPathInstruction,
     iter_absolute_path_instructions,
+    iter_bounding_box_for_svg_root,
     iter_parse_path,
     iter_path_split,
     parse_path_values
@@ -11,6 +16,8 @@ from sciencebeam_parser.utils.svg import (
 
 
 LOGGER = logging.getLogger(__name__)
+
+SVG_E = ElementMaker(namespace=SVG_NS)
 
 
 class TestIterPathSplit:
@@ -244,3 +251,17 @@ class TestIterAbsolutePathInstructions:
         result = list(iter_absolute_path_instructions(path_instructions))
         LOGGER.debug('result: %r', result)
         assert result == absolute_path_instructions
+
+
+class TestIterSvgBoundingBoxForSvgRoot:
+    def test_should_return_simple_bounding_box_from_path(self):
+        svg_root = SVG_E.svg(
+            SVG_E.g(
+                SVG_E.path(d='M 10 10 H 90 V 90 H 10 L 10 10')
+            )
+        )
+        result = list(iter_bounding_box_for_svg_root(svg_root))
+        LOGGER.debug('result: %r', result)
+        assert result == [
+            SvgBoundingBox(x=10, y=10, width=80, height=80)
+        ]

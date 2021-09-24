@@ -2,8 +2,16 @@ import logging
 import re
 from typing import Iterable, List, NamedTuple, Optional, Tuple
 
+from lxml import etree
+
 
 LOGGER = logging.getLogger(__name__)
+
+SVG_NS = 'http://www.w3.org/2000/svg'
+SVG_NS_PREFIX = '{%s}' % SVG_NS
+
+SVG_G = SVG_NS_PREFIX + 'g'
+SVG_PATH = SVG_NS_PREFIX + 'path'
 
 
 class SvgPathCommands:
@@ -99,3 +107,30 @@ def iter_absolute_path_instructions(
         yield absolute_path_instruction
         previous_x = absolute_path_instruction.x
         previous_y = absolute_path_instruction.y
+
+
+class SvgBoundingBox(NamedTuple):
+    x: float
+    y: float
+    width: float
+    height: float
+
+
+def get_bounding_box_from_path_instructions(
+    path_instructions: Iterable[SvgPathInstruction]
+) -> SvgBoundingBox:
+    absolute_path_instruction = iter_absolute_path_instructions(path_instructions)
+    x_list, y_list = zip(*((p.x, p.y) for p in absolute_path_instruction))
+    x = min(x_list)
+    y = min(y_list)
+    width = max(x_list) - x
+    height = max(y_list) - y
+    return SvgBoundingBox(x, y, width=width, height=height)
+
+
+def iter_bounding_box_for_svg_root(svg_root: etree.ElementBase) -> Iterable[SvgBoundingBox]:
+    for g_element in svg_root.findall(SVG_G):
+        for path in g_element.findall(SVG_PATH):
+            yield get_bounding_box_from_path_instructions(
+                iter_parse_path(path.attrib['d'])
+            )

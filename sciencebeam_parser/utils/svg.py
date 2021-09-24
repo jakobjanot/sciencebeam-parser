@@ -18,8 +18,12 @@ class SvgPathCommands:
     CLOSE_PATH = 'Z'
     CUBIC_CURVE_TO = 'C'
     CUBIC_CURVE_BY = 'c'
-    SEQ_CUBIC_CURVE_TO = 'S'
-    SEQ_CUBIC_CURVE_BY = 's'
+    SHORTCUT_CUBIC_CURVE_TO = 'S'
+    SHORTCUT_CUBIC_CURVE_BY = 's'
+    QUADRATIC_CURVE_TO = 'Q'
+    QUADRATIC_CURVE_BY = 'q'
+    SHORTCUT_QUADRATIC_CURVE_TO = 'T'
+    SHORTCUT_QUADRATIC_CURVE_BY = 't'
 
 
 class SvgPathInstruction(NamedTuple):

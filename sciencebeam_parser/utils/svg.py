@@ -4,6 +4,8 @@ from typing import Iterable, List, NamedTuple, Optional, Tuple
 
 from lxml import etree
 
+from sciencebeam_parser.utils.bounding_box import BoundingBox
+
 
 LOGGER = logging.getLogger(__name__)
 
@@ -109,26 +111,19 @@ def iter_absolute_path_instructions(
         previous_y = absolute_path_instruction.y
 
 
-class SvgBoundingBox(NamedTuple):
-    x: float
-    y: float
-    width: float
-    height: float
-
-
 def get_bounding_box_from_path_instructions(
     path_instructions: Iterable[SvgPathInstruction]
-) -> SvgBoundingBox:
+) -> BoundingBox:
     absolute_path_instruction = iter_absolute_path_instructions(path_instructions)
     x_list, y_list = zip(*((p.x, p.y) for p in absolute_path_instruction))
     x = min(x_list)
     y = min(y_list)
     width = max(x_list) - x
     height = max(y_list) - y
-    return SvgBoundingBox(x, y, width=width, height=height)
+    return BoundingBox(x, y, width=width, height=height)
 
 
-def iter_bounding_box_for_svg_root(svg_root: etree.ElementBase) -> Iterable[SvgBoundingBox]:
+def iter_bounding_box_for_svg_root(svg_root: etree.ElementBase) -> Iterable[BoundingBox]:
     for g_element in svg_root.findall(SVG_G):
         for path in g_element.findall(SVG_PATH):
             yield get_bounding_box_from_path_instructions(

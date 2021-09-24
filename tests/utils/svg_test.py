@@ -2,9 +2,9 @@ import logging
 
 from lxml.builder import ElementMaker
 
+from sciencebeam_parser.utils.bounding_box import BoundingBox
 from sciencebeam_parser.utils.svg import (
     SVG_NS,
-    SvgBoundingBox,
     SvgPathCommands,
     SvgPathInstruction,
     iter_absolute_path_instructions,
@@ -263,5 +263,5 @@ class TestIterSvgBoundingBoxForSvgRoot:
         result = list(iter_bounding_box_for_svg_root(svg_root))
         LOGGER.debug('result: %r', result)
         assert result == [
-            SvgBoundingBox(x=10, y=10, width=80, height=80)
+            BoundingBox(x=10, y=10, width=80, height=80)
         ]

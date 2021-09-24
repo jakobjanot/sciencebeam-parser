@@ -36,7 +36,7 @@ class TestIterParsePathValues:
         assert result == [10.0, 10.0]
 
 
-class TestIterParsePath:
+class TestIterParsePath:  # pylint: disable=too-many-public-methods
     def test_should_parse_simple_move_to(self):
         result = list(iter_parse_path('M10 10'))
         LOGGER.debug('result: %r', result)

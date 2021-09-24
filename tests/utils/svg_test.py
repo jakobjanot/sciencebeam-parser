@@ -3,11 +3,37 @@ import logging
 from sciencebeam_parser.utils.svg import (
     SvgPathCommands,
     SvgPathInstruction,
-    iter_parse_path
+    iter_parse_path,
+    iter_path_split,
+    parse_path_values
 )
 
 
 LOGGER = logging.getLogger(__name__)
+
+
+class TestIterPathSplit:
+    def test_should_split_simple_move_to_path(self):
+        result = list(iter_path_split('M10 10'))
+        LOGGER.debug('result: %r', result)
+        assert result == [('M', '10 10')]
+
+    def test_should_split_simple_move_to_path_and_close_path(self):
+        result = list(iter_path_split('M10 10 Z'))
+        LOGGER.debug('result: %r', result)
+        assert result == [('M', '10 10'), ('Z', '')]
+
+
+class TestIterParsePathValues:
+    def test_should_parse_empty_str(self):
+        result = parse_path_values('')
+        LOGGER.debug('result: %r', result)
+        assert result == []
+
+    def test_should_parse_two_space_separated_values(self):
+        result = parse_path_values('10 10')
+        LOGGER.debug('result: %r', result)
+        assert result == [10.0, 10.0]
 
 
 class TestIterParsePath:
@@ -97,4 +123,20 @@ class TestIterParsePath:
             SvgPathInstruction(command=SvgPathCommands.MOVE_TO, x=10, y=10),
             SvgPathInstruction(command=SvgPathCommands.LINE_TO, x=20, y=20),
             SvgPathInstruction(command=SvgPathCommands.CLOSE_PATH, x=10, y=10)
+        ]
+
+    def test_should_parse_bezier_cubic_curve_to(self):
+        result = list(iter_parse_path('M10 10 C 20 20, 40 20, 50 10'))
+        LOGGER.debug('result: %r', result)
+        assert result == [
+            SvgPathInstruction(command=SvgPathCommands.MOVE_TO, x=10, y=10),
+            SvgPathInstruction(command=SvgPathCommands.CUBIC_CURVE_TO, x=50, y=10),
+        ]
+
+    def test_should_parse_bezier_cubic_curve_by(self):
+        result = list(iter_parse_path('M10 10 c 20 20, 40 20, 50 10'))
+        LOGGER.debug('result: %r', result)
+        assert result == [
+            SvgPathInstruction(command=SvgPathCommands.MOVE_TO, x=10, y=10),
+            SvgPathInstruction(command=SvgPathCommands.CUBIC_CURVE_BY, x=50, y=10),
         ]

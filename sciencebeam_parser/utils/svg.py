@@ -1,5 +1,9 @@
+import logging
 import re
-from typing import Iterable, NamedTuple, Optional, Tuple
+from typing import Iterable, List, NamedTuple, Optional, Tuple
+
+
+LOGGER = logging.getLogger(__name__)
 
 
 class SvgPathCommands:
@@ -12,6 +16,8 @@ class SvgPathCommands:
     VERTICAL_LINE_TO = 'V'
     VERTICAL_LINE_BY = 'v'
     CLOSE_PATH = 'Z'
+    CUBIC_CURVE_TO = 'C'
+    CUBIC_CURVE_BY = 'c'
 
 
 class SvgPathInstruction(NamedTuple):
@@ -20,28 +26,50 @@ class SvgPathInstruction(NamedTuple):
     y: float
 
 
-SVG_PATH_PATTERN = r'([A-Za-z])\s*(?:(\d+\.?\d?)(?:(?:\s+|\s*,\s*)(\d+\.?\d?))?)?'
+def iter_path_split(path_expr: str) -> Iterable[Tuple[str, str]]:
+    command: Optional[str] = None
+    for item in re.split(r'([A-Za-z])', path_expr):
+        if command:
+            yield command, item.strip()
+            command = None
+        if item.isalpha():
+            command = item
+    if command:
+        yield command, ''
+
+
+def parse_path_values(values_str: str) -> List[float]:
+    LOGGER.debug('values_str: %r', values_str)
+    if not values_str:
+        return []
+    return [
+        float(item)
+        for item in re.split(r'\s+|\s*,\s*', values_str)
+    ]
 
 
 def iter_parse_path(path_expr: str) -> Iterable[SvgPathInstruction]:
     previous_x = 0.0
     previous_y = 0.0
     first_point: Optional[Tuple[float, float]] = None
-    for m in re.finditer(SVG_PATH_PATTERN, path_expr):
-        command = m.group(1)
+    for command, values_str in iter_path_split(path_expr):
+        values = parse_path_values(values_str)
         command_upper = command.upper()
-        if command_upper == 'Z':
+        if command_upper == SvgPathCommands.CLOSE_PATH:
             assert first_point is not None
             x, y = first_point  # pylint: disable=unpacking-non-sequence
-        elif command_upper == 'H':
-            x = float(m.group(2))
+        elif command_upper == SvgPathCommands.HORIZONTAL_LINE_TO:
+            x = values[0]
             y = previous_y if command_upper == command else 0.0
-        elif command_upper == 'V':
+        elif command_upper == SvgPathCommands.VERTICAL_LINE_TO:
             x = previous_x if command_upper == command else 0.0
-            y = float(m.group(2))
+            y = values[0]
+        elif command_upper == SvgPathCommands.CUBIC_CURVE_TO:
+            x = values[4]
+            y = values[5]
         else:
-            x = float(m.group(2))
-            y = float(m.group(3))
+            x = values[0]
+            y = values[1]
         yield SvgPathInstruction(command=command, x=x, y=y)
         previous_x = x
         previous_y = y

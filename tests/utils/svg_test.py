@@ -188,3 +188,19 @@ class TestIterParsePath:
             SvgPathInstruction(command=SvgPathCommands.MOVE_TO, x=10, y=10),
             SvgPathInstruction(command=SvgPathCommands.SHORTCUT_QUADRATIC_CURVE_BY, x=50, y=10),
         ]
+
+    def test_should_parse_arc_to(self):
+        result = list(iter_parse_path('M10 10 A 30 50 0 0 1 162.55 162.45'))
+        LOGGER.debug('result: %r', result)
+        assert result == [
+            SvgPathInstruction(command=SvgPathCommands.MOVE_TO, x=10, y=10),
+            SvgPathInstruction(command=SvgPathCommands.ARC_TO, x=162.55, y=162.45),
+        ]
+
+    def test_should_parse_arc_by(self):
+        result = list(iter_parse_path('M10 10 a 30 50 0 0 1 162.55 162.45'))
+        LOGGER.debug('result: %r', result)
+        assert result == [
+            SvgPathInstruction(command=SvgPathCommands.MOVE_TO, x=10, y=10),
+            SvgPathInstruction(command=SvgPathCommands.ARC_BY, x=162.55, y=162.45),
+        ]

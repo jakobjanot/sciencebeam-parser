@@ -24,6 +24,8 @@ class SvgPathCommands:
     QUADRATIC_CURVE_BY = 'q'
     SHORTCUT_QUADRATIC_CURVE_TO = 'T'
     SHORTCUT_QUADRATIC_CURVE_BY = 't'
+    ARC_TO = 'A'
+    ARC_BY = 'a'
 
 
 class SvgPathInstruction(NamedTuple):

@@ -80,3 +80,22 @@ def iter_parse_path(path_expr: str) -> Iterable[SvgPathInstruction]:
         previous_y = y
         if first_point is None:
             first_point = (x, y)
+
+
+def iter_absolute_path_instructions(
+    path_instructions: Iterable[SvgPathInstruction]
+) -> Iterable[SvgPathInstruction]:
+    previous_x = 0.0
+    previous_y = 0.0
+    for path_instruction in path_instructions:
+        if not path_instruction.command.islower():
+            absolute_path_instruction = path_instruction
+        else:
+            absolute_path_instruction = SvgPathInstruction(
+                path_instruction.command.upper(),
+                x=previous_x + path_instruction.x,
+                y=previous_y + path_instruction.y
+            )
+        yield absolute_path_instruction
+        previous_x = absolute_path_instruction.x
+        previous_y = absolute_path_instruction.y

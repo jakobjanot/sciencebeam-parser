@@ -3,6 +3,7 @@ import logging
 from sciencebeam_parser.utils.svg import (
     SvgPathCommands,
     SvgPathInstruction,
+    iter_absolute_path_instructions,
     iter_parse_path,
     iter_path_split,
     parse_path_values
@@ -204,3 +205,42 @@ class TestIterParsePath:  # pylint: disable=too-many-public-methods
             SvgPathInstruction(command=SvgPathCommands.MOVE_TO, x=10, y=10),
             SvgPathInstruction(command=SvgPathCommands.ARC_BY, x=162.55, y=162.45),
         ]
+
+
+class TestIterAbsolutePathInstructions:
+    def test_should_not_change_absolute_commands(self):
+        path_instructions = [
+            SvgPathInstruction(command=SvgPathCommands.MOVE_TO, x=10, y=10),
+            SvgPathInstruction(command=SvgPathCommands.LINE_TO, x=20, y=20)
+        ]
+        result = list(iter_absolute_path_instructions(path_instructions))
+        LOGGER.debug('result: %r', result)
+        assert result == path_instructions
+
+    def test_should_convert_relative_commands_to_absolute(self):
+        path_instructions = [
+            SvgPathInstruction(command=SvgPathCommands.MOVE_TO, x=10, y=10),
+            SvgPathInstruction(command=SvgPathCommands.LINE_BY, x=20, y=20)
+        ]
+        absolute_path_instructions = [
+            SvgPathInstruction(command=SvgPathCommands.MOVE_TO, x=10, y=10),
+            SvgPathInstruction(command=SvgPathCommands.LINE_TO, x=10 + 20, y=10 + 20)
+        ]
+        result = list(iter_absolute_path_instructions(path_instructions))
+        LOGGER.debug('result: %r', result)
+        assert result == absolute_path_instructions
+
+    def test_should_convert_multiple_relative_commands_to_absolute(self):
+        path_instructions = [
+            SvgPathInstruction(command=SvgPathCommands.MOVE_TO, x=10, y=10),
+            SvgPathInstruction(command=SvgPathCommands.LINE_BY, x=20, y=20),
+            SvgPathInstruction(command=SvgPathCommands.LINE_BY, x=30, y=40)
+        ]
+        absolute_path_instructions = [
+            SvgPathInstruction(command=SvgPathCommands.MOVE_TO, x=10, y=10),
+            SvgPathInstruction(command=SvgPathCommands.LINE_TO, x=10 + 20, y=10 + 20),
+            SvgPathInstruction(command=SvgPathCommands.LINE_TO, x=10 + 20 + 30, y=10 + 20 + 40)
+        ]
+        result = list(iter_absolute_path_instructions(path_instructions))
+        LOGGER.debug('result: %r', result)
+        assert result == absolute_path_instructions

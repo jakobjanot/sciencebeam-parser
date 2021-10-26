@@ -1,7 +1,7 @@
 import logging
 from tempfile import TemporaryDirectory
 from pathlib import Path
-from typing import Callable, Iterable, List, Optional, Type, TypeVar
+from typing import Callable, Iterable, List, NamedTuple, Optional, Type, TypeVar
 from zipfile import ZipFile
 
 from flask import Blueprint, jsonify, request, Response, url_for
@@ -83,25 +83,44 @@ VALID_MODEL_OUTPUT_FORMATS = {
 }
 
 
-def get_post_data():
+class SourceDataWrapper(NamedTuple):
+    data: bytes
+    media_type: str
+    filename: Optional[str] = None
+
+
+def get_optional_post_data_wrapper() -> SourceDataWrapper:
     if not request.files:
-        return request.data
+        return SourceDataWrapper(
+            data=request.data,
+            media_type=request.mimetype,
+            filename=request.args.get('filename')
+        )
     supported_file_keys = ['file', 'input']
     for name in supported_file_keys:
         if name not in request.files:
             continue
         uploaded_file = request.files[name]
-        return uploaded_file.read()
+        data = uploaded_file.stream.read()
+        return SourceDataWrapper(
+            data=data,
+            media_type=uploaded_file.mimetype,
+            filename=uploaded_file.filename
+        )
     raise BadRequest(
         f'missing file named one pf "{supported_file_keys}", found: {request.files.keys()}'
     )
 
 
-def get_required_post_data():
-    data = get_post_data()
-    if not data:
+def get_required_post_data_wrapper() -> SourceDataWrapper:
+    data_wrapper = get_optional_post_data_wrapper()
+    if not data_wrapper.data:
         raise BadRequest('no contents')
-    return data
+    return data_wrapper
+
+
+def get_required_post_data() -> bytes:
+    return get_required_post_data_wrapper().data
 
 
 def get_typed_request_arg(

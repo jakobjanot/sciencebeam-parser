@@ -190,12 +190,8 @@ class TestApiBlueprint:
 
         def test_should_reject_unsupported_request_media_type(
             self,
-            test_client: FlaskClient,
-            get_tei_for_semantic_document_mock: MagicMock
+            test_client: FlaskClient
         ):
-            get_tei_for_semantic_document_mock.return_value = (
-                TeiDocument(etree.fromstring(TEI_XML_CONTENT_1))
-            )
             response = test_client.post(self.get_api_path(), data={
                 'input': (BytesIO(PDF_CONTENT_1), 'test.unsupported')
             })
@@ -203,12 +199,8 @@ class TestApiBlueprint:
 
         def test_should_reject_unsupported_accept_media_type(
             self,
-            test_client: FlaskClient,
-            get_tei_for_semantic_document_mock: MagicMock
+            test_client: FlaskClient
         ):
-            get_tei_for_semantic_document_mock.return_value = (
-                TeiDocument(etree.fromstring(TEI_XML_CONTENT_1))
-            )
             response = test_client.post(self.get_api_path(), data={
                 'input': (BytesIO(PDF_CONTENT_1), PDF_FILENAME_1)
             }, headers={'Accept': 'media/unsupported'})

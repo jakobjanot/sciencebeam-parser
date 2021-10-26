@@ -240,6 +240,21 @@ The currently supported fields are:
 
 Passing in any other values (no values), will behave as if no `includes` parameter was passed in.
 
+### Word* support
+
+All of the above APIs will also accept a Word* document instead of a PDF.
+
+Formats that are supported:
+
+* `.docx` (media type: `application/vnd.openxmlformats-officedocument.wordprocessingml.document`)
+* `.dotx` (media type: `application/vnd.openxmlformats-officedocument.wordprocessingml.template`)
+* `.doc` (media type: `application/msword`)
+* `.rtf` (media type: `application/rtf`)
+
+The support is currently implemented by converting the document to PDF using [LibreOffice](https://www.libreoffice.org/).
+
+Where no content type is provided, the content type is inferred from the file extension.
+
 ### Docker Usage
 
 ```bash

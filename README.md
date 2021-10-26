@@ -255,6 +255,14 @@ The support is currently implemented by converting the document to PDF using [Li
 
 Where no content type is provided, the content type is inferred from the file extension.
 
+For example:
+
+```bash
+curl --fail --show-error \
+    --form "file=@test-data/minimal-office-open.docx;filename=test-data/minimal-office-open.docx" \
+    --silent "http://localhost:8080/api/convert?first_page=1&last_page=1"
+```
+
 ### Docker Usage
 
 ```bash

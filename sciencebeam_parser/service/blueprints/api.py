@@ -4,7 +4,7 @@ from pathlib import Path
 from typing import Iterable, List, Type, TypeVar
 from zipfile import ZipFile
 
-from flask import Blueprint, jsonify, request, Response, url_for
+from flask import abort, Blueprint, jsonify, request, Response, url_for
 from flask.helpers import send_file
 from lxml import etree
 
@@ -15,6 +15,7 @@ from sciencebeam_trainer_delft.sequence_labelling.tag_formatter import (
     TagOutputFormats,
     iter_format_tag_result
 )
+from werkzeug.exceptions import BadRequest
 
 from sciencebeam_parser.app.context import AppContext
 from sciencebeam_parser.config.config import AppConfig
@@ -718,6 +719,11 @@ class ApiBlueprint(Blueprint):
             'data_wrapper: media_type=%r (filename=%r)',
             data_wrapper.media_type, data_wrapper.filename
         )
+        if data_wrapper.media_type != MediaTypes.PDF:
+            abort(Response(
+                'unsupported media type: %r' % data_wrapper.media_type,
+                BadRequest.code
+            ))
         pdf_path = Path(temp_dir) / 'test.pdf'
         pdf_path.write_bytes(data_wrapper.data)
         return str(pdf_path)

@@ -1,5 +1,5 @@
 import logging
-from typing import NamedTuple, Optional, Sequence
+from typing import Callable, NamedTuple, Optional, Sequence, TypeVar
 
 from flask import request
 from werkzeug.exceptions import BadRequest
@@ -12,6 +12,9 @@ from sciencebeam_parser.utils.media_types import (
 
 
 LOGGER = logging.getLogger(__name__)
+
+
+T = TypeVar('T')
 
 
 DEFAULT_FILENAME = 'file'
@@ -100,4 +103,57 @@ def assert_and_get_first_accept_matching_media_type(
     return assert_and_get_first_matching_media_type(
         get_request_accept_media_types(),
         available_media_types
+    )
+
+
+def get_typed_request_arg(
+    name: str,
+    type_: Callable[[str], T],
+    default_value: Optional[T] = None,
+    required: bool = False
+) -> Optional[T]:
+    value = request.args.get(name)
+    if value:
+        return type_(value)
+    if required:
+        raise ValueError(f'request arg {name} is required')
+    return default_value
+
+
+def str_to_bool(value: str) -> bool:
+    value_lower = value.lower()
+    if value_lower in {'true', '1'}:
+        return True
+    if value_lower in {'false', '0'}:
+        return False
+    raise ValueError('unrecognised boolean value: %r' % value)
+
+
+def get_bool_request_arg(
+    name: str,
+    default_value: Optional[bool] = None,
+    required: bool = False
+) -> Optional[bool]:
+    return get_typed_request_arg(
+        name, str_to_bool, default_value=default_value, required=required
+    )
+
+
+def get_int_request_arg(
+    name: str,
+    default_value: Optional[int] = None,
+    required: bool = False
+) -> Optional[int]:
+    return get_typed_request_arg(
+        name, int, default_value=default_value, required=required
+    )
+
+
+def get_str_request_arg(
+    name: str,
+    default_value: Optional[str] = None,
+    required: bool = False
+) -> Optional[str]:
+    return get_typed_request_arg(
+        name, str, default_value=default_value, required=required
     )

@@ -1,3 +1,4 @@
+# pylint: disable=too-many-lines
 import logging
 from tempfile import TemporaryDirectory
 from pathlib import Path
@@ -45,7 +46,11 @@ from sciencebeam_parser.processors.fulltext.config import RequestFieldNames
 from sciencebeam_parser.resources.xslt import TEI_TO_JATS_XSLT_FILE
 from sciencebeam_parser.transformers.xslt import XsltTransformerWrapper
 from sciencebeam_parser.utils.flask import assert_and_get_first_accept_matching_media_type
-from sciencebeam_parser.utils.media_types import MediaTypes
+from sciencebeam_parser.utils.media_types import (
+    MediaTypes,
+    guess_extension_for_media_type,
+    guess_media_type_for_filename
+)
 from sciencebeam_parser.utils.text import normalize_text, parse_comma_separated_value
 from sciencebeam_parser.utils.tokenizer import get_tokenized_tokens
 from sciencebeam_parser.processors.fulltext.api import (
@@ -72,6 +77,9 @@ class RequestArgs:
 
 class ModelOutputFormats:
     RAW_DATA = 'raw_data'
+
+
+DEFAULT_FILENAME = 'file'
 
 
 DEFAULT_MODEL_OUTPUT_FORMAT = TagOutputFormats.JSON
@@ -110,6 +118,20 @@ def get_optional_post_data_wrapper() -> SourceDataWrapper:
     raise BadRequest(
         f'missing file named one pf "{supported_file_keys}", found: {request.files.keys()}'
     )
+
+
+def get_data_wrapper_with_improved_media_type_or_filename(
+    data_wrapper: SourceDataWrapper
+) -> SourceDataWrapper:
+    if not data_wrapper.filename:
+        return data_wrapper._replace(filename='%s%s' % (
+            DEFAULT_FILENAME, guess_extension_for_media_type(data_wrapper.media_type) or ''
+        ))
+    if data_wrapper.media_type == 'application/octet-stream':
+        media_type = guess_media_type_for_filename(data_wrapper.filename)
+        if media_type:
+            return data_wrapper._replace(media_type=media_type)
+    return data_wrapper
 
 
 def get_required_post_data_wrapper() -> SourceDataWrapper:
@@ -795,9 +817,15 @@ class ApiBlueprint(Blueprint):
         self,
         temp_dir: str
     ) -> str:
-        data = get_required_post_data()
+        data_wrapper = get_data_wrapper_with_improved_media_type_or_filename(
+            get_required_post_data_wrapper()
+        )
+        LOGGER.info(
+            'data_wrapper: media_type=%r (filename=%r)',
+            data_wrapper.media_type, data_wrapper.filename
+        )
         pdf_path = Path(temp_dir) / 'test.pdf'
-        pdf_path.write_bytes(data)
+        pdf_path.write_bytes(data_wrapper.data)
         return str(pdf_path)
 
     def _get_layout_document_for_request(

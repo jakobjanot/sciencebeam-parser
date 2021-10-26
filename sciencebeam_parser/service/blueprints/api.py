@@ -95,6 +95,14 @@ VALID_MODEL_OUTPUT_FORMATS = {
 }
 
 
+DOC_TO_PDF_SUPPORTED_MEDIA_TYPES = {
+    MediaTypes.DOCX,
+    MediaTypes.DOTX,
+    MediaTypes.DOC,
+    MediaTypes.RTF
+}
+
+
 def _get_file_upload_form(title: str):
     return (
         '''
@@ -722,7 +730,7 @@ class ApiBlueprint(Blueprint):
             'data_wrapper: media_type=%r (filename=%r)',
             data_wrapper.media_type, data_wrapper.filename
         )
-        if data_wrapper.media_type in {MediaTypes.DOCX}:
+        if data_wrapper.media_type in DOC_TO_PDF_SUPPORTED_MEDIA_TYPES:
             source_path = Path(temp_dir) / (
                 'test%s' % (
                     guess_extension_for_media_type(data_wrapper.media_type) or ''

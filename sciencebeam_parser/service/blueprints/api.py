@@ -43,6 +43,7 @@ from sciencebeam_parser.document.semantic_document import (
 from sciencebeam_parser.document.tei_document import get_tei_for_semantic_document
 from sciencebeam_parser.processors.fulltext.config import RequestFieldNames
 from sciencebeam_parser.resources.xslt import TEI_TO_JATS_XSLT_FILE
+from sciencebeam_parser.transformers.doc_converter_wrapper import DocConverterWrapper
 from sciencebeam_parser.transformers.xslt import XsltTransformerWrapper
 from sciencebeam_parser.utils.flask import (
     assert_and_get_first_accept_matching_media_type,
@@ -54,7 +55,8 @@ from sciencebeam_parser.utils.flask import (
     get_str_request_arg
 )
 from sciencebeam_parser.utils.media_types import (
-    MediaTypes
+    MediaTypes,
+    guess_extension_for_media_type
 )
 from sciencebeam_parser.utils.text import normalize_text, parse_comma_separated_value
 from sciencebeam_parser.utils.tokenizer import get_tokenized_tokens
@@ -590,6 +592,7 @@ class ApiBlueprint(Blueprint):
             TEI_TO_JATS_XSLT_FILE,
             xslt_template_parameters=tei_to_jats_config.get('parameters', {})
         )
+        self.doc_converter_wrapper = DocConverterWrapper()
         ModelNestedBluePrint(
             'Segmentation',
             model=fulltext_models.segmentation_model,
@@ -719,6 +722,17 @@ class ApiBlueprint(Blueprint):
             'data_wrapper: media_type=%r (filename=%r)',
             data_wrapper.media_type, data_wrapper.filename
         )
+        if data_wrapper.media_type in {MediaTypes.DOCX}:
+            source_path = Path(temp_dir) / (
+                'test%s' % (
+                    guess_extension_for_media_type(data_wrapper.media_type) or ''
+                )
+            )
+            source_path.write_bytes(data_wrapper.data)
+            target_temp_file = self.doc_converter_wrapper.convert(
+                str(source_path)
+            )
+            return target_temp_file
         if data_wrapper.media_type != MediaTypes.PDF:
             abort(Response(
                 'unsupported media type: %r' % data_wrapper.media_type,
